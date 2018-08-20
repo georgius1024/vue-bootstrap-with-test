@@ -46,8 +46,7 @@
       }
     },
     methods: {
-      closed (val) {
-        console.log(val)
+      closed () {
         this.gotMessage = false
         this.$emit('closed')
       }

@@ -24,13 +24,28 @@ describe('loading-spinner.vue', () => {
   })
 
   it('should hide after timeout', () => {
+    wrapper.setProps({ active: false })
+    jest.useFakeTimers()
+    wrapper.setProps({ timeout: 10 })
+    expect(wrapper.props().timeout).toBe(10)
+    wrapper.setProps({ active: true })
+    expect(setTimeout).toHaveBeenCalledTimes(1);
+    expect(setTimeout).toHaveBeenLastCalledWith(expect.any(Function), 10);
+    jest.runAllTimers()
+  })
+
+  /*
+  it('should hide after timeout', () => {
     wrapper.setProps({ active: true, timeout: 10 })
     const div = wrapper.find('.spinner-control')
     expect(div.attributes().style).toBe('')
+    console.log(div.html())
     setTimeout(() => {
+      console.log(div.html())
       expect(div.attributes().style).toBe('display: none;')
     }, 12)
-
+    jest.runAllTimers()
   })
+  */
 
 })

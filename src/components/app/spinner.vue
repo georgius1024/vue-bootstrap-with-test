@@ -54,8 +54,7 @@ export default {
       this.rolling = Boolean(value)
       if (this.rolling && this.timeout) {
         this.timer = setTimeout(() => {
-          this.rolling = false
-          this.$emit('timeout')
+          this.timedout()
         }, this.timeout)
       }
       if (!this.rolling && this.timer) {
@@ -72,6 +71,12 @@ export default {
     timeout: {
       type: Number,
       default: 3 * 1000
+    }
+  },
+  methods: {
+    timedout () {
+      this.rolling = false
+      this.$emit('timeout')
     }
   }
 }
