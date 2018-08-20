@@ -1,5 +1,3 @@
-import _get from 'lodash.get'
-import _has from 'lodash.get'
 import Vue from 'vue'
 import Vuex from 'vuex'
 import config from '@/config'
@@ -12,7 +10,7 @@ const state = {
   message: {
     text: '',
     level: ''
-  },
+  }
 }
 const getters = {
   user: state => state.account.user,

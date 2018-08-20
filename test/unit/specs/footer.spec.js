@@ -1,10 +1,9 @@
-import Vue from 'vue'
 import config from  '@/config'
 import {
   shallowMount
 } from '@vue/test-utils'
 
-import Footer from '@/components/footer'
+import Footer from '@/components/app/footer'
 
 describe('footer.vue', () => {
   it('should render correct contents', () => {

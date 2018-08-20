@@ -1,4 +1,3 @@
-import _merge from 'lodash.merge'
 import config from '@/config'
 
 import { getStored, putStored, deleteAll } from '@/lib/local-storage'
@@ -39,7 +38,6 @@ const mutations = {
     deleteAll()
   }
 }
-
 
 export default {
   namespaced: true,

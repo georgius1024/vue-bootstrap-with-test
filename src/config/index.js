@@ -3,8 +3,8 @@ let production = {
   APP_NAME: 'Большие Банковские Тесты',
   APP_ID: 'bbt-web',
   API_URL: '/api/',
-  APP_VERSION: '5.0.0.0 pre', 
-  APP_COPYRIGHT: '(c) Агентство ВЭП'
+  APP_VERSION: '5.0.0.0 pre',
+  APP_COPYRIGHT: '© 1999, 2018 Агентство ВЭП'
 }
 
 let development = Object.assign({}, production, {
@@ -13,7 +13,6 @@ let development = Object.assign({}, production, {
 })
 
 let test = Object.assign({}, development)
-
 
 let config = {
   development,

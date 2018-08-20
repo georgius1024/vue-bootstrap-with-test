@@ -46,6 +46,9 @@
     </v-toolbar>
     <v-content>
       <router-view/>
+      <v-btn @click="raiseMessage()" v-html="'message'"/>
+      <v-btn @click="raiseError()" v-html="'error'"/>
+      <v-btn @click="startSpinner" v-html="'Wait'"/>
     </v-content>
     <v-navigation-drawer
       temporary
@@ -63,16 +66,22 @@
         </v-list-tile>
       </v-list>
     </v-navigation-drawer>
-    <v-footer :fixed="fixed" app>
-      <span>&copy; 2017</span>
-    </v-footer>
+    <app-footer />
+    <app-message :message="message" :level="level" @closed="message=false"/>
+    <app-spinner :active="spinner" :timeout="1000*60" @timeout="timedOut"/>
   </v-app>
 </template>
 
 <script>
+import AppFooter from '@/components/app/footer'
+import AppMessage from '@/components/app/message'
+import AppSpinner from '@/components/app/spinner'
 export default {
   data () {
     return {
+      message: '',
+      level: '',
+      spinner: false,
       clipped: false,
       drawer: true,
       fixed: false,
@@ -86,6 +95,28 @@ export default {
       title: 'Vuetify.js'
     }
   },
-  name: 'App'
+  name: 'App',
+  methods: {
+    raiseMessage (message) {
+      this.message = message || 'OLOLOLOLO!!!'
+      this.level = ''
+    },
+    raiseError (error) {
+      this.message = error || 'OLOLOLOLO!!!'
+      this.level = 'error'
+    },
+    startSpinner () {
+      this.spinner = true
+    },
+    timedOut () {
+      this.spinner = false
+      this.raiseError('Process is timed out')
+    }
+  },
+  components: {
+    AppFooter,
+    AppMessage,
+    AppSpinner
+  }
 }
 </script>

@@ -1,34 +1,30 @@
-import Vue from 'vue'
-import Vuex from 'vuex'
-import config from  '@/config'
+import Message from '@/components/app/message'
 import {
-  shallowMount,
-  createLocalVue
+  shallowMount
 } from '@vue/test-utils'
-import { hasStored, getStored, putStored, deleteStored, deleteAll } from '@/lib/local-storage'
-import {} from '../mocks/local-storage.mock'
-import Message from '@/components/message'
-
-const localVue = createLocalVue()
-
-localVue.use(Vuex)
-
-
-const user = {
-  id: 1,
-  name: 'Super-user-barabuser'
-}
-const token = 'token-token-nigger-broken'
-
+const message = 'olololololo!'
 describe('message.vue', () => {
-  putStored(config.APP_ID + '-' + 'user', user)
-  putStored(config.APP_ID + '-' + 'token', token)
-  const store = require('@/store').default
+  it('Accept message property', () => {
+    const wrapper = shallowMount(Message)
+    const element = wrapper.find('v-snackbar-stub')
+    wrapper.setProps({ message })
+    expect(element.html()).toContain(message)
+  })
 
-  it('should do something', () => {
-    const wrapper = shallowMount(Message, { store, localVue })
-    expect(wrapper.html()).toContain('v-snackbar-stub')
-    console.log(wrapper.html())
+  it('Accept level property', () => {
+    const wrapper = shallowMount(Message)
+    wrapper.setProps({ level: 'error' })
+    const element = wrapper.find('v-snackbar-stub')
+    expect(element.attributes().color).toBe('error')
+    wrapper.setProps({ level: '' })
+    expect(element.attributes().color).toBe('info')
+  })
+
+  it('Accept timeout property', () => {
+    const wrapper = shallowMount(Message)
+    wrapper.setProps({ timeout: 10000 })
+    const element = wrapper.find('v-snackbar-stub')
+    expect(element.attributes().timeout).toBe('10000')
   })
 
 })
