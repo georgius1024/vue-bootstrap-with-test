@@ -1,47 +1,82 @@
+'use strict'
 import axios from 'axios'
-import config from '@/config'
-
-const addTrailingSlash = (url) => String(url).replace(/\/?$/, '/')
 
 const Api = {
-  apiStatus: '',
-  apiError: false,
-  token: false,
-  onGetToken: false,
-  onStartRequest: false,
-  onCompleteRequest: false,
-  onMessage: false,
-  onError: false
+  status: '',
+  message: false,
+  error: false,
+  request: false,
+  response: false,
+  subscriptions: {
+  }
 }
-Api.request = (request) => {
-  request.url = addTrailingSlash(config.API_URL) + request.url
-  if (Api.onGetToken) {
-    Api.token = Api.onGetToken()
+Api.subscribe = (event, listener, key = '') => {
+  if (!Api.subscriptions[event]) {
+    Api.subscriptions[event] = []
   }
-  if (Api.token) {
-    request.headers = {
-      Authorization: 'Bearer ' + Api.token
-    }
-  }
-  return axios(request)
+  Api.subscriptions[event].push({
+    listener,
+    key
+  })
+  return true
 }
 
-Api.rest = (request) => {
+Api.unsubscribe = (event, key = '') => {
+  if (!Api.subscriptions[event]) {
+    return false
+  }
+  Api.subscriptions[event] = Api.subscriptions[event].filter(e => e.key !== key)
+  if (Api.subscriptions[event].length === 0) {
+    delete Api.subscriptions[event]
+  }
+  return true
+}
+
+Api.on = (event, listener, key = '') => {
+  if (listener) {
+    Api.subscribe(event, listener, key)
+  } else {
+    Api.unsubscribe(event, listener, key)
+  }
+}
+
+Api.emit = (event, payload) => {
+  if (!Api.subscriptions[event]) {
+    return false
+  }
+  Api.subscriptions[event].forEach(listener => listener(payload))
+  return true
+}
+
+Api.setBaseUrl = (url) => {
+  axios.defaults.baseURL = url
+}
+
+Api.setToken = (token) => {
+  axios.defaults.headers.common['Authorization'] = 'Bearer ' + token;
+}
+
+Api.clearToken = () => {
+  delete axios.defaults.headers.common['Authorization']
+}
+
+Api.request = (request) => {
   return new Promise((resolve, reject) => {
-    if (Api.onStartRequest) {
-      Api.onStartRequest()
-    }
+    Api.error = false
+    Api.request = request
+    Api.response = false
+    Api.emit('request', request)
     Api.request(request)
       .then(response => {
-        if (Api.onCompleteRequest) {
-          Api.onCompleteRequest()
-        }
+        Api.response = response
+        Api.emit('complete', response)
         if (response.data) {
-          if (Api.onMessage && response.data.message) {
-            Api.onMessage(response.data.message)
+          if (response.data.message) {
+            Api.emit('message', response.data.message)
           }
           if (response.data.auth) {
-            Api.token = response.data.auth.token
+            Api.emit('auth', response.data)
+            Api.setToken(response.data.auth.token)
           }
         }
         resolve(response.data)
@@ -55,12 +90,13 @@ Api.rest = (request) => {
             errorStatus = error.response.status
           }
         }
-        if (Api.onError) {
-          Api.onError(errorMessage, errorStatus)
-        }
+        Api.status = errorStatus
+        Api.message = errorMessage
+        Api.error = error
+        Api.response = error.response
+        Api.emit('error', error)
         reject(error)
       })
   })
 }
-
 export default Api
