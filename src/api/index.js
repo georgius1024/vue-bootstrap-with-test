@@ -2,6 +2,7 @@
 import axios from 'axios'
 
 const Api = {
+  http: axios,
   status: '',
   message: false,
   error: false,
@@ -10,6 +11,8 @@ const Api = {
   subscriptions: {
   }
 }
+
+
 Api.subscribe = (event, listener, key = '') => {
   if (!Api.subscriptions[event]) {
     Api.subscriptions[event] = []
@@ -49,15 +52,15 @@ Api.emit = (event, payload) => {
 }
 
 Api.setBaseUrl = (url) => {
-  axios.defaults.baseURL = url
+  Api.http.defaults.baseURL = url
 }
 
 Api.setToken = (token) => {
-  axios.defaults.headers.common['Authorization'] = 'Bearer ' + token
+  Api.http.defaults.headers.common['Authorization'] = 'Bearer ' + token
 }
 
 Api.clearToken = () => {
-  delete axios.defaults.headers.common['Authorization']
+  delete Api.http.defaults.headers.common['Authorization']
 }
 
 Api.execute = (request) => {
@@ -66,7 +69,7 @@ Api.execute = (request) => {
     Api.request = request
     Api.response = false
     Api.emit('request', request)
-    axios(request)
+    Api.http(request)
       .then(response => {
         Api.response = response
         Api.status = response.status
