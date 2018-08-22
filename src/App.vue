@@ -106,9 +106,10 @@ export default {
     })
     Api.on('error', () => {
       this.raiseError(Api.message)
+      this.stopSpinner()
     })
-    Api.on('message', () => {
-      this.raiseMessage(Api.message)
+    Api.on('message', (message) => {
+      this.raiseMessage(message)
     })
   },
   name: 'App',

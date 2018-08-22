@@ -65,9 +65,11 @@ Api.clearToken = () => {
 
 Api.execute = (request) => {
   return new Promise((resolve, reject) => {
-    Api.error = false
     Api.request = request
-    Api.response = false
+    Api.error = false
+    Api.message = ''
+    Api.status = null
+    Api.response = null
     Api.emit('request', request)
     Api.http(request)
       .then(response => {
