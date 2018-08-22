@@ -36,7 +36,7 @@ Api.on = (event, listener, key = '') => {
   if (listener) {
     Api.subscribe(event, listener, key)
   } else {
-    Api.unsubscribe(event, listener, key)
+    Api.unsubscribe(event, key)
   }
 }
 
@@ -44,7 +44,7 @@ Api.emit = (event, payload) => {
   if (!Api.subscriptions[event]) {
     return false
   }
-  Api.subscriptions[event].forEach(listener => listener(payload))
+  Api.subscriptions[event].forEach(subscription => subscription.listener(payload))
   return true
 }
 
@@ -53,26 +53,28 @@ Api.setBaseUrl = (url) => {
 }
 
 Api.setToken = (token) => {
-  axios.defaults.headers.common['Authorization'] = 'Bearer ' + token;
+  axios.defaults.headers.common['Authorization'] = 'Bearer ' + token
 }
 
 Api.clearToken = () => {
   delete axios.defaults.headers.common['Authorization']
 }
 
-Api.request = (request) => {
+Api.execute = (request) => {
   return new Promise((resolve, reject) => {
     Api.error = false
     Api.request = request
     Api.response = false
     Api.emit('request', request)
-    Api.request(request)
+    axios(request)
       .then(response => {
         Api.response = response
+        Api.status = response.status
         Api.emit('complete', response)
         if (response.data) {
           if (response.data.message) {
             Api.emit('message', response.data.message)
+            Api.message = response.data.message
           }
           if (response.data.auth) {
             Api.emit('auth', response.data)
@@ -82,16 +84,15 @@ Api.request = (request) => {
         resolve(response.data)
       })
       .catch(error => {
-        let errorMessage = 'Общая ошибка'
-        let errorStatus = 900
+        Api.emit('errorCatch', error)
+        Api.message = error.message || 'Общая ошибка'
+        Api.status = 900
         if (error.response) {
-          if (error.response.data) {
-            errorMessage = error.response.data.message
-            errorStatus = error.response.status
+          if (error.response.data && error.response.data.message) {
+            Api.message = error.response.data.message
           }
+          Api.status = error.response.status
         }
-        Api.status = errorStatus
-        Api.message = errorMessage
         Api.error = error
         Api.response = error.response
         Api.emit('error', error)
@@ -99,4 +100,40 @@ Api.request = (request) => {
       })
   })
 }
+
+Api.get = (url) => {
+  const request = {
+    url,
+    method: 'get'
+  }
+  return Api.execute(request)
+}
+
+Api.post = (url, data) => {
+  const request = {
+    url,
+    data,
+    method: 'post'
+  }
+  return Api.execute(request)
+}
+
+Api.put = (url, data) => {
+  const request = {
+    url,
+    data,
+    method: 'put'
+  }
+  return Api.execute(request)
+}
+
+Api.delete = (url, data) => {
+  const request = {
+    url,
+    data,
+    method: 'delete'
+  }
+  return Api.execute(request)
+}
+
 export default Api

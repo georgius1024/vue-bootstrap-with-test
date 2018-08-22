@@ -76,6 +76,8 @@
 import AppFooter from '@/components/app/footer'
 import AppMessage from '@/components/app/message'
 import AppSpinner from '@/components/app/spinner'
+import Api from '@/api'
+
 export default {
   data () {
     return {
@@ -95,6 +97,20 @@ export default {
       title: 'Vuetify.js'
     }
   },
+  created () {
+    Api.on('request', () => {
+      this.startSpinner()
+    })
+    Api.on('complete', () => {
+      this.stopSpinner()
+    })
+    Api.on('error', () => {
+      this.raiseError(Api.message)
+    })
+    Api.on('message', () => {
+      this.raiseMessage(Api.message)
+    })
+  },
   name: 'App',
   methods: {
     raiseMessage (message) {
@@ -106,6 +122,9 @@ export default {
       this.level = 'error'
     },
     startSpinner () {
+      this.spinner = true
+    },
+    stopSpinner () {
       this.spinner = true
     },
     timedOut () {

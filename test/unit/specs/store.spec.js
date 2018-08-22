@@ -1,4 +1,3 @@
-import Vue from 'vue'
 import config from '@/config'
 
 import { hasStored, getStored, putStored, deleteStored, deleteAll } from '@/lib/local-storage'
@@ -8,7 +7,7 @@ const user = {
   id: 1,
   name: 'Super-user-barabuser'
 }
-const token = 'token-token-nigger-broken'
+const token = 'token-token-user-broken'
 const message = 'Ololololo!'
 describe('store-account.js', () => {
 
