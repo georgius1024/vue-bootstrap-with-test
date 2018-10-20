@@ -1,41 +1,23 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
-import config from '@/config'
 import account from './modules/account'
+import eventBus from '@/event-bus'
 
 Vue.use(Vuex)
 
 const state = {
-  loading: false,
-  message: {
-    text: '',
-    level: ''
-  }
 }
 const getters = {
   user: state => state.account.user,
-  message: state => state.message,
-  isAuthenticated: state => Boolean(state.account.token),
-  loading: state => state.loading
+  isAuthenticated: state => Boolean(state.account.accessToken)
 }
 const mutations = {
-  setError: (state, error) => {
-    state.message.text = error
-    state.message.level = 'error'
-  },
-  setMessage: (state, message) => {
-    state.message.text = message
-    state.message.level = ''
-  },
-  setLoading: (state, loading) => {
-    state.loading = loading
-  }
 }
 
 const actions = {
 }
 
-export default new Vuex.Store({
+const store = new Vuex.Store({
   modules: {
     account
   },
@@ -43,5 +25,26 @@ export default new Vuex.Store({
   getters,
   mutations,
   actions,
-  strict: config.DEBUG
+  strict: process.env.NODE_ENV === 'production'
 })
+
+eventBus.on(eventBus.events.credentials, (auth) => {
+  store.commit('account/setAccessToken', auth.accessToken)
+  store.commit('account/setRefreshToken', auth.refreshToken)
+})
+
+eventBus.on(eventBus.events.logout, (auth) => {
+  store.commit('account/setAccessToken', '')
+  store.commit('account/setRefreshToken', '')
+  store.commit('account/setUser', {})
+})
+
+if (account.state.accessToken) {
+  Vue.nextTick(() => {
+    eventBus.emit(eventBus.events.restore, account.state.user)
+    const { accessToken, refreshToken } = account.state
+    eventBus.emit(eventBus.events.credentials, { accessToken, refreshToken })
+  })
+}
+
+export default store

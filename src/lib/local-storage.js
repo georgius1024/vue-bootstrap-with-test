@@ -7,7 +7,7 @@ export function getStored (key, defVal) {
     try {
       return JSON.parse(localStorage.getItem(key))
     } catch (e) {
-      console.log(`Error parsing "{$key}": ${e}`)
+      console.log(`Error parsing "${key}": ${e}`)
       return defVal
     }
   } else {

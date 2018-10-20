@@ -1,4 +1,5 @@
 import config from '@/config'
+import eventBus from '@/event-bus'
 
 import { getStored, putStored, deleteAll } from '@/lib/local-storage'
 
@@ -12,13 +13,15 @@ const store = (key, value) => {
 
 const state = {
   user: stored('user', {}),
-  token: stored('token')
+  accessToken: stored('access-token'),
+  refreshToken: stored('refresh-token')
 }
 
 const getters = {
   user: state => state.user,
-  token: state => state.token,
-  isAuthenticated: state => Boolean(state.token)
+  accessToken: state => state.accessToken,
+  refreshToken: state => state.refreshToken,
+  isAuthenticated: state => Boolean(state.refreshToken)
 }
 
 const mutations = {
@@ -26,21 +29,36 @@ const mutations = {
     state.user = user
     store('user', state.user)
   },
-  login: (state, { user, token }) => {
+  setAccessToken: (state, accessToken) => {
+    state.accessToken = accessToken
+    store('access-token', state.accessToken)
+  },
+  setRefreshToken: (state, refreshToken) => {
+    state.refreshToken = refreshToken
+    store('refresh-token', state.refreshToken)
+  },
+  login: (state, {user, auth}) => {
     state.user = user
-    state.token = token
+    const { accessToken, refreshToken } = auth
+    state.accessToken = accessToken
+    state.refreshToken = refreshToken
     store('user', state.user)
-    store('token', state.token)
+    store('access-token', state.accessToken)
+    store('refresh-token', state.refreshToken)
+    eventBus.emit(eventBus.events.login, state.user)
+    eventBus.emit(eventBus.events.credentials, auth)
   },
   logout: state => {
     state.user = {}
-    state.token = ''
+    state.accessToken = ''
+    state.refreshToken = ''
     deleteAll()
+    eventBus.emit(eventBus.events.logout)
   }
 }
-
 export default {
   namespaced: true,
   state,
   getters,
-  mutations}
+  mutations
+}

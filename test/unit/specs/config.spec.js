@@ -1,5 +1,4 @@
-import Vue from 'vue'
-import config from  '@/config'
+import config from '@/config'
 
 describe('config.js', () => {
   it('should be object', () => {

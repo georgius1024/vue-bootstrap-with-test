@@ -1,24 +1,26 @@
 /**
- * Created by georgius on 22.08.18.
+ * Created by georgius on 20.10.18.
  */
-const mockAxios = function () {
-  if (mockAxios.mockError) {
-    return Promise.reject(mockAxios.mockError)
+
+const mockAxios = function (request) {
+  const response = mockAxios.intercept(request)
+  response.status = response.status || 200
+  if (response.status >= 400) {
+    return Promise.reject(response)
   } else {
-    return Promise.resolve(mockAxios.mockResponse)
+    return Promise.resolve(response)
   }
-
 }
+mockAxios.intercept = function (request) {
+  return {
+    status: 200
+  }
+}
+
 mockAxios.defaults = {
-  baseURL: '',
+  baseUrl: '',
   headers: {
-    common: {
-    }
+    common: []
   }
 }
-mockAxios.mockResponse = {
-  status: 200
-}
-mockAxios.mockError = false
-
 export default mockAxios

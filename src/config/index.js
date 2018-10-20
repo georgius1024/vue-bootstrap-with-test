@@ -1,15 +1,13 @@
 let production = {
-  DEBUG: false,
-  APP_NAME: 'Большие Банковские Тесты',
   APP_ID: 'bbt-web',
-  API_URL: '/api/',
+  APP_NAME: 'Большие Банковские Тесты',
   APP_VERSION: '5.0.0.0 pre',
-  APP_COPYRIGHT: '© 1999, 2018 Агентство ВЭП'
+  APP_COPYRIGHT: '© 1999, 2018 Агентство ВЭП',
+  API_URL: '/api/'
 }
 
 let development = Object.assign({}, production, {
-  DEBUG: true,
-  API_URL: 'http://localhost:3300/api/'
+  API_URL: 'http://localhost:3800/'
 })
 
 let test = Object.assign({}, development)

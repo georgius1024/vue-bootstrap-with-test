@@ -31,22 +31,10 @@ describe('message.vue', () => {
     const element = wrapper.find('v-snackbar-stub')
     expect(element.attributes().timeout).toBe('10000')
   })
-  /*
-  it('should hide after timeout', async () => {
-    const wrapper = shallowMount(Message)
-    wrapper.setProps({ message: message, timeout: 10 })
-    expect(wrapper.vm.$vnode.componentInstance.gotMessage).toBeTruthy()
-    setTimeout(() => {
-      expect(wrapper.vm.$vnode.componentInstance.gotMessage).toBeFalsy()
-    }, 1000)
-    jest.runAllTimers()
-  })
-   */
-
 
   it('should close after "closed()" call', () => {
     const wrapper = shallowMount(Message)
-    wrapper.setProps({ message: message, timeout: 10 })
+    wrapper.setProps({ message: message })
     expect(wrapper.vm.$vnode.componentInstance.gotMessage).toBeTruthy()
     wrapper.vm.$vnode.componentInstance.closed()
     expect(wrapper.vm.$vnode.componentInstance.gotMessage).toBeFalsy()

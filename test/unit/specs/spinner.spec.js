@@ -7,7 +7,6 @@ import spinner from '@/components/app/spinner'
 describe('loading-spinner.vue', () => {
   const wrapper = shallowMount(spinner)
   it('should render correct contents', () => {
-    expect(wrapper.html()).toContain('v-progress-circular-stub')
     const div = wrapper.find('.spinner-control')
     expect(div.html()).toContain('v-progress-circular-stub')
     expect(div.attributes().style).toBe('display: none;')
@@ -24,14 +23,18 @@ describe('loading-spinner.vue', () => {
   })
 
   it('should hide after timeout', () => {
-    wrapper.setProps({ active: false })
     jest.useFakeTimers()
+
+    const div = wrapper.find('.spinner-control')
+    wrapper.setProps({ active: false })
     wrapper.setProps({ timeout: 10 })
     expect(wrapper.props().timeout).toBe(10)
     wrapper.setProps({ active: true })
-    expect(setTimeout).toHaveBeenCalledTimes(1);
-    expect(setTimeout).toHaveBeenLastCalledWith(expect.any(Function), 10);
-    jest.runAllTimers()
+    expect(setTimeout).toHaveBeenCalledTimes(1)
+    expect(setTimeout).toHaveBeenLastCalledWith(expect.any(Function), 10)
+    expect(div.attributes().style).toBe('')
+    jest.runTimersToTime(12)
+    expect(div.attributes().style).toBe('display: none;')
   })
 
   /*

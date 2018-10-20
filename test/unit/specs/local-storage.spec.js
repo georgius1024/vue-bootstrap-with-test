@@ -1,6 +1,5 @@
 import Vue from 'vue'
 import { hasStored, getStored, putStored, deleteStored, deleteAll } from '@/lib/local-storage'
-import {} from '../mocks/local-storage.mock'
 
 describe('local-storage.js', () => {
   putStored('key-number', 1)

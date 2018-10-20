@@ -1,4 +1,5 @@
 'use strict'
+
 import axios from 'axios'
 
 const Api = {
@@ -8,101 +9,147 @@ const Api = {
   error: false,
   request: false,
   response: false,
-  subscriptions: {
-  }
+  accessToken: '',
+  refreshToken: '',
+  refreshEndPoint: 'auth/refresh'
 }
+import eventBus from  '@/event-bus'
 
+eventBus.on(eventBus.events.credentials, (auth) => {
+  Api.setAccessToken(auth.accessToken)
+  Api.setRefreshToken(auth.refreshToken)
+})
 
-Api.subscribe = (event, listener, key = '') => {
-  if (!Api.subscriptions[event]) {
-    Api.subscriptions[event] = []
-  }
-  Api.subscriptions[event].push({
-    listener,
-    key
-  })
-  return true
-}
-
-Api.unsubscribe = (event, key = '') => {
-  if (!Api.subscriptions[event]) {
-    return false
-  }
-  Api.subscriptions[event] = Api.subscriptions[event].filter(e => e.key !== key)
-  if (Api.subscriptions[event].length === 0) {
-    delete Api.subscriptions[event]
-  }
-  return true
-}
-
-Api.on = (event, listener, key = '') => {
-  if (listener) {
-    Api.subscribe(event, listener, key)
-  } else {
-    Api.unsubscribe(event, key)
-  }
-}
-
-Api.emit = (event, payload) => {
-  if (!Api.subscriptions[event]) {
-    return false
-  }
-  Api.subscriptions[event].forEach(subscription => subscription.listener(payload))
-  return true
-}
+eventBus.on(eventBus.events.logout, (auth) => {
+  Api.clearAccessToken()
+  Api.clearRefreshToken()
+})
 
 Api.setBaseUrl = (url) => {
   Api.http.defaults.baseURL = url
 }
 
-Api.setToken = (token) => {
+Api.setAccessToken = (token) => {
+  Api.accessToken = token
   Api.http.defaults.headers.common['Authorization'] = 'Bearer ' + token
 }
 
-Api.clearToken = () => {
+Api.clearAccessToken = () => {
+  Api.accessToken = ''
   delete Api.http.defaults.headers.common['Authorization']
+}
+
+Api.setRefreshToken = (token) => {
+  Api.refreshToken = token
+}
+
+Api.clearRefreshToken = () => {
+  Api.refreshToken = ''
+}
+
+Api.setRefreshEndpoint = (url) => {
+  Api.refreshEndPoint = url
+}
+
+Api._success = (response) => {
+  Api.response = response
+  Api.status = response.status
+  eventBus.emit(eventBus.events.idle)
+  if (response.data) {
+    if (response.data.message) {
+      eventBus.emit(eventBus.events.message, response.data.message)
+      Api.message = response.data.message
+    }
+    if (response.data.auth) {
+      eventBus.emit(eventBus.events.credentials, response.data.auth)
+      Api.setAccessToken(response.data.auth.accessTtoken)
+      Api.setRefreshToken(response.data.auth.refreshToken)
+    }
+  }
+}
+
+Api._error = (error) => {
+  Api.message = error.message || 'Общая ошибка'
+  Api.status = 900
+  eventBus.emit(eventBus.events.idle)
+  if (error.response) {
+    if (error.response.data && error.response.data.message) {
+      Api.message = error.response.data.message
+    }
+    Api.status = error.response.status
+  } else if (error.code === 'ECONNREFUSED') {
+    Api.status = ''
+    Api.message = 'Пропала связь с сервером'
+  }
+  Api.error = error
+  Api.response = error.response
+  eventBus.emit(eventBus.events.error, String(Api.error))
+
+  if (Api.status === 401) { // На самом деле, пользователь не валидный
+    eventBus.emit(eventBus.events.logout)
+    Api.clearAccessToken()
+    Api.clearRefreshToken()
+  }
 }
 
 Api.execute = (request) => {
   return new Promise((resolve, reject) => {
+    eventBus.emit(eventBus.events.busy)
     Api.request = request
-    Api.error = false
-    Api.message = ''
+    Api.error = null
+    Api.message = null
     Api.status = null
     Api.response = null
-    Api.emit('request', request)
+    const method = request.method
     Api.http(request)
-      .then(response => {
-        Api.response = response
-        Api.status = response.status
-        Api.emit('complete', response)
-        if (response.data) {
-          if (response.data.message) {
-            Api.emit('message', response.data.message)
-            Api.message = response.data.message
+    .then(response => {
+      Api._success(response)
+      resolve(response.data)
+    })
+    .catch(error => {
+      const originalRequest = error.config
+      if (
+        error.code !== 'ECONNABORTED'  // С того адреса отвечают
+        &&
+        error.response // Есть отклик
+        &&
+        error.response.status === 401  // Именно 401 ошибка и только она
+        &&
+        Api.refreshToken // Мы приготовили токен обновления
+        &&
+        Api.refreshEndPoint // И знаем, что с ним делать
+        &&
+        !originalRequest._restoring // И мы это делаем однократно
+      )  {
+        // Далее следует попытка восстановить аутентификацию через refresh
+        originalRequest._restoring = true
+        return Api.http({
+          url: Api.refreshEndPoint,
+          method: 'post',
+          data: {
+            token: Api.refreshToken
           }
-          if (response.data.auth) {
-            Api.emit('auth', response.data)
-            Api.setToken(response.data.auth.token)
-          }
-        }
-        resolve(response.data)
-      })
-      .catch(error => {
-        Api.emit('errorCatch', error)
-        Api.message = error.message || 'Общая ошибка'
-        Api.status = 900
-        if (error.response) {
-          if (error.response.data && error.response.data.message) {
-            Api.message = error.response.data.message
-          }
-          Api.status = error.response.status
-        }
-        Api.error = error
-        Api.response = error.response
-        Api.emit('error', error)
+        })
+        .then(response => {
+          Api._success(response)
+          const newToken = response.data.auth.accessToken
+          // Получен новый токен. Сейчас повторю запрос
+          originalRequest.headers['Authorization'] = 'Bearer ' + newToken
+          Api.http(originalRequest)
+          .then(response => {
+            Api._success(response)
+            resolve(response.data)
+          })
+          .catch(error => {
+            Api._error(error)
+            reject(error)
+          })
+        })
+      } else {
+        Api._error(error)
         reject(error)
-      })
+      }
+    })
   })
 }
 

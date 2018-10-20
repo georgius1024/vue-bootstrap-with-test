@@ -1,18 +1,26 @@
 <template>
-  <v-footer absolute app>
-    <span v-html="config.APP_COPYRIGHT"/>
+  <v-footer absolute app dark>
+    <div class="mx-4" v-html="copyright"/>
     <v-spacer></v-spacer>
-    <span class="mr-4">{{config.APP_NAME}} v{{config.APP_VERSION}}</span>
+    <div class="mr-4">{{application}} v{{version}}</div>
  </v-footer>
 </template>
 
 <script type="text/babel">
-  import config from '@/config'
   export default {
     name: 'Footer',
-    data () {
-      return {
-        config
+    props: {
+      copyright: {
+        type: String,
+        required: true
+      },
+      application: {
+        type: String,
+        required: true
+      },
+      version: {
+        type: String,
+        required: true
       }
     }
   }

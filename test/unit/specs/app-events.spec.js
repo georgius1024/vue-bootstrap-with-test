@@ -1,4 +1,3 @@
-// TODO DELETE THIS TEST
 import {
   createLocalVue,
   shallowMount
@@ -11,6 +10,7 @@ import store from '@/store'
 
 // import Api from '@/api'
 // import mockAxios from '../mocks/axios.mock'
+import eventBus from  '@/event-bus'
 
 const localVue = createLocalVue()
 localVue.use(store)
@@ -21,12 +21,58 @@ import App from '@/App'
 
 
 describe('App.vue', () => {
-  it('should run', async() => {
-    const wrapper = shallowMount(App, {
-      localVue,
-      router,
-      store
+  const wrapper = shallowMount(App, {
+    localVue,
+    router,
+    store
+  })
+  it('should be mounted without errors', () => {
+    expect(wrapper).toBeTruthy()
+  })
+
+  it('event hanlers works as expected', () => {
+    // Методы отрабатываю, как надо
+    eventBus.emit(eventBus.events.message, 'message')
+    expect(wrapper.vm.message).toBe('message')
+    expect(wrapper.vm.level).toBe('')
+
+    eventBus.emit(eventBus.events.error, 'error')
+    expect(wrapper.vm.message).toBe('error')
+    expect(wrapper.vm.level).toBe('error')
+
+    eventBus.emit(eventBus.events.busy)
+    expect(wrapper.vm.spinner).toBeTruthy()
+
+    eventBus.emit(eventBus.events.idle)
+    expect(wrapper.vm.spinner).toBeFalsy()
+  })
+
+  it('should listen events', () => {
+    const raiseMessage = jest.fn()
+    const raiseError = jest.fn()
+    const startSpinner = jest.fn()
+    const stopSpinner = jest.fn()
+    wrapper.setMethods({
+      raiseMessage,
+      raiseError,
+      startSpinner,
+      stopSpinner
     })
+    // Методы были вызваны
+    eventBus.emit(eventBus.events.message, 'message')
+    expect(raiseMessage).toBeCalled()
+    expect(raiseMessage).toBeCalledWith('message')
+
+    eventBus.emit(eventBus.events.error, 'error')
+    expect(raiseError).toBeCalled()
+    expect(raiseError).toBeCalledWith('error')
+
+    eventBus.emit(eventBus.events.busy)
+    expect(startSpinner).toBeCalled()
+
+    eventBus.emit(eventBus.events.idle)
+    expect(stopSpinner).toBeCalled()
+
   })
 })
 

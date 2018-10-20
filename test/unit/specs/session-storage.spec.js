@@ -6,7 +6,8 @@ describe('session-storage.js', () => {
   putStored('key-number', 1)
   putStored('key-string', 'hello')
   putStored('key-object', { n: 1, text: 'hello' })
-  it('hasStored should inspect is stored', () => {
+
+  it('hasStored should returns is key stored or not', () => {
     expect(hasStored('key-number')).toBeTruthy()
     expect(hasStored('key-string')).toBeTruthy()
     expect(hasStored('key-object')).toBeTruthy()
