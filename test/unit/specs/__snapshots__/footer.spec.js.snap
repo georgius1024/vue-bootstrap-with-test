@@ -1,0 +1,24 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`footer.vue should render correct contents 1`] = `
+<v-footer-stub
+  absolute=""
+  app=""
+  dark=""
+  height="32"
+>
+  <div
+    class="mx-4"
+  >
+    © 1999, 2018 Агентство ВЭП
+  </div>
+   
+  <v-spacer-stub />
+   
+  <div
+    class="mr-4"
+  >
+    Большие Банковские Тесты v5.0.0.0 pre
+  </div>
+</v-footer-stub>
+`;

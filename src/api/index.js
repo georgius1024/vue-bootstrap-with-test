@@ -20,7 +20,7 @@ eventBus.on(eventBus.events.credentials, (auth) => {
   Api.setRefreshToken(auth.refreshToken)
 })
 
-eventBus.on(eventBus.events.logout, (auth) => {
+eventBus.on(eventBus.events.logout, () => {
   Api.clearAccessToken()
   Api.clearRefreshToken()
 })
@@ -62,7 +62,7 @@ Api._success = (response) => {
     }
     if (response.data.auth) {
       eventBus.emit(eventBus.events.credentials, response.data.auth)
-      Api.setAccessToken(response.data.auth.accessTtoken)
+      Api.setAccessToken(response.data.auth.accessToken)
       Api.setRefreshToken(response.data.auth.refreshToken)
     }
   }
@@ -83,7 +83,7 @@ Api._error = (error) => {
   }
   Api.error = error
   Api.response = error.response
-  eventBus.emit(eventBus.events.error, String(Api.error))
+  eventBus.emit(eventBus.events.error, String(Api.message))
 
   if (Api.status === 401) { // На самом деле, пользователь не валидный
     eventBus.emit(eventBus.events.logout)
@@ -100,7 +100,6 @@ Api.execute = (request) => {
     Api.message = null
     Api.status = null
     Api.response = null
-    const method = request.method
     Api.http(request)
     .then(response => {
       Api._success(response)
@@ -132,9 +131,8 @@ Api.execute = (request) => {
         })
         .then(response => {
           Api._success(response)
-          const newToken = response.data.auth.accessToken
           // Получен новый токен. Сейчас повторю запрос
-          originalRequest.headers['Authorization'] = 'Bearer ' + newToken
+          originalRequest.headers['Authorization'] = 'Bearer ' + Api.accessToken
           Api.http(originalRequest)
           .then(response => {
             Api._success(response)
@@ -144,6 +142,11 @@ Api.execute = (request) => {
             Api._error(error)
             reject(error)
           })
+        })
+        .catch(error => {
+          // вероятно, неправильный refresh-token
+          Api._error(error)
+          reject(error)
         })
       } else {
         Api._error(error)

@@ -1,20 +1,29 @@
 /**
  * Created by georgius on 20.10.18.
  */
+'use strict'
 
 const mockAxios = function (request) {
-  const response = mockAxios.intercept(request)
-  response.status = response.status || 200
-  if (response.status >= 400) {
-    return Promise.reject(response)
-  } else {
-    return Promise.resolve(response)
-  }
+  return new Promise((resolve, reject) => {
+    mockAxios.intercept(request)
+      .then(response => {
+        response.status = response.status || 200
+        return resolve(response)
+      })
+      .catch(error => {
+        request.headers = request.headers || {}
+        error.config = request
+        return reject(error)
+      })
+  })
 }
-mockAxios.intercept = function (request) {
-  return {
-    status: 200
-  }
+mockAxios.intercept = function () {
+  return Promise.resolve({
+    status: 200,
+    data: {
+      message: 'OK'
+    }
+  })
 }
 
 mockAxios.defaults = {

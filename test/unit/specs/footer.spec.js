@@ -17,6 +17,7 @@ describe('footer.vue', () => {
     expect(wrapper.html()).toContain(config.APP_COPYRIGHT)
     expect(wrapper.html()).toContain(config.APP_NAME)
     expect(wrapper.html()).toContain(config.APP_VERSION)
+    expect(wrapper.element).toMatchSnapshot()
   })
 
 })
