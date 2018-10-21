@@ -14,6 +14,26 @@ const tokens = {
 }
 
 const securedEndPoint = (request) => {
+  if (request.url === 'bad-request') {
+    return Promise.reject({
+      response: {
+        status: 404,
+        data: {
+          message: 'Not found'
+        }
+      }
+    })
+  }
+  if (request.url === 'impossible') {
+    return Promise.reject({
+      response: {
+        status: 401,
+        data: {
+          message: 'Shall not pass!!!'
+        }
+      }
+    })
+  }
   if (request.url === Api.refreshEndPoint && request.method === 'post') { // Запрос на обновление
     if (request.data.token === tokens.oldRefreshToken) { // Пришла правильная refreshToken
       // Возвращаем новые токены
@@ -71,6 +91,18 @@ describe('Api client', () => {
   it('Can set accessToken', () => {
     Api.setAccessToken(tokens.oldAccessToken)
     expect(Api.http.defaults.headers.common['Authorization']).toBe('Bearer ' + tokens.oldAccessToken)
+  })
+
+  it('Can set refreshToken', () => {
+    Api.setRefreshToken(tokens.oldRefreshToken)
+    expect(Api.refreshToken).toBe(tokens.oldRefreshToken)
+  })
+
+  it('Can set setRefreshEndpoint', () => {
+    const old = Api.refreshEndPoint
+    Api.setRefreshEndpoint('-')
+    expect(Api.refreshEndPoint).toBe('-')
+    Api.setRefreshEndpoint(old)
   })
 
   it('Can clear token', () => {
@@ -216,4 +248,33 @@ describe('Api client', () => {
     expect(Api.message).toBe('Невозможно обновить токен, перелогиньтесь, пожалуйста')
     expect(Api.status).toBe(401)
   })
+
+  it('Can handle 404 error', async () => {
+    try {
+      await Api.get('bad-request')
+    } catch (error) {
+      expect(error.response).toBeTruthy()
+      expect(error.response.status).toBe(404)
+    }
+    expect(Api.message).toBe('Not found')
+    expect(Api.status).toBe(404)
+  })
+
+  it('If restore fails, it can return last error', async () => {
+    Api.setAccessToken(tokens.oldAccessToken)
+    Api.setRefreshToken(tokens.oldRefreshToken)
+
+    expect(Api.accessToken).toBe(tokens.oldAccessToken)
+    expect( Api.http.defaults.headers.common['Authorization']).toBe('Bearer ' + Api.accessToken)
+
+    try {
+      await Api.get('impossible')
+    } catch (error) {
+      expect(error.response).toBeTruthy()
+      expect(error.response.status).toBe(401)
+    }
+    expect(Api.message).toBe('Shall not pass!!!')
+    expect(Api.status).toBe(401)
+  })
+
 })

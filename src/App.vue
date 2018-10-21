@@ -13,7 +13,7 @@
       <v-btn @click="logoutAction" v-html="'Logout'"/>
     </v-content>
     <app-footer :copyright="config.APP_COPYRIGHT" :application="config.APP_NAME" :version="config.APP_VERSION" />
-    <app-message :message="message" :level="level" @closed="message=false" />
+    <app-message :message="message" :level="level" v-model="showMessage" />
     <app-spinner :active="spinner" :timeout="1000*3" @timeout="timedOut"/>
     <app-scroll-top :bottom="44" :right="4" :speed="20"/>
   </v-app>
@@ -37,6 +37,7 @@ export default {
     return {
       message: '',
       level: '',
+      showMessage: false,
       spinner: false,
       config
     }
@@ -66,10 +67,12 @@ export default {
     raiseMessage (message) {
       this.level = ''
       this.message = message
+      this.showMessage = !!message
     },
     raiseError (error) {
       this.level = 'error'
       this.message = error
+      this.showMessage = !!error
     },
     startSpinner () {
       this.spinner = true

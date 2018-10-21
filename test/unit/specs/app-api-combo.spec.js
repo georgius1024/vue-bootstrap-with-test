@@ -28,6 +28,28 @@ describe('App.vue', () => {
       store
     })
   })
+  it('can call own methods without error', () => {
+    let errorCnt = 0
+    const wrapper = shallowMount(App, {
+      localVue,
+      router,
+      store
+    })
+
+    try {
+      wrapper.vm.timedOut()
+      expect(wrapper.vm.message).toBe('Процесс завершился тайм-аутом')
+      wrapper.vm.messageAction()
+      wrapper.vm.errorAction()
+      wrapper.vm.waitAction()
+      wrapper.vm.loginAction()
+      wrapper.vm.logoutAction()
+    } catch (error) {
+      // console.error(error)
+      errorCnt += 1
+    }
+    expect(errorCnt).toBe(0)
+  })
 })
 
 /*

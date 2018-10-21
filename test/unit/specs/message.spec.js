@@ -1,6 +1,7 @@
 
 import Message from '@/components/app/message'
 import {
+  mount,
   shallowMount
 } from '@vue/test-utils'
 
@@ -32,19 +33,32 @@ describe('message.vue', () => {
     expect(element.attributes().timeout).toBe('10000')
   })
 
-  it('should close after "closed()" call', () => {
-    const wrapper = shallowMount(Message)
-    wrapper.setProps({ message: message })
-    expect(wrapper.vm.$vnode.componentInstance.gotMessage).toBeTruthy()
-    wrapper.vm.$vnode.componentInstance.closed()
-    expect(wrapper.vm.$vnode.componentInstance.gotMessage).toBeFalsy()
+  it('should show and hide by manipulation with input property', () => {
+    const wrapper = mount(Message)
+    expect(wrapper.html()).toBeFalsy()  // DIV еще не отрисован
+    wrapper.setProps({ message: message, timeout: 10000, value: true })
+    expect(wrapper.html()).toBeTruthy()  // DIV появляется
+    wrapper.setProps({ value: false })
+    expect(wrapper.html()).toBeFalsy()  // DIV снова исчезает
   })
 
-  it('should close on button click', () => {
+  it('should close after timeout', () => {
+    jest.useFakeTimers()
+    const wrapper = mount(Message)
+    expect(wrapper.html()).toBeFalsy()
+    wrapper.setProps({ message: message, timeout: 10, value: true })
+    expect(wrapper.html()).toBeTruthy()
+    jest.runTimersToTime(12)
+    expect(wrapper.html()).toBeFalsy()
+  })
+
+  it('should emit input(false) on button click', () => {
     const wrapper = shallowMount(Message)
-    wrapper.setProps({ message: message })
+    wrapper.setProps({ message: message, value: true })
     wrapper.find('v-btn-stub').trigger('click')
-    expect(wrapper.vm.$vnode.componentInstance.gotMessage).toBeFalsy()
+    expect(wrapper.emitted().input).toBeTruthy()
+    expect(wrapper.emitted().input.length).toBe(1)
+    expect(wrapper.emitted().input[0][0]).toBe(false)
   })
 
 })

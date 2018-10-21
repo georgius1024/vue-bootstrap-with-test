@@ -8,8 +8,6 @@ import Vuex from 'vuex'
 import router from '@/router'
 import store from '@/store'
 
-// import Api from '@/api'
-// import mockAxios from '../mocks/axios.mock'
 import eventBus from  '@/event-bus'
 
 const localVue = createLocalVue()
@@ -30,22 +28,37 @@ describe('App.vue', () => {
     expect(wrapper).toBeTruthy()
   })
 
-  it('event hanlers works as expected', () => {
-    // Методы отрабатываю, как надо
+  it('message and error event hanlers works as expected', () => {
+    const messageControl = wrapper.find('appmessage-stub')
     eventBus.emit(eventBus.events.message, 'message')
     expect(wrapper.vm.message).toBe('message')
+    expect(wrapper.vm.showMessage).toBe(true)
     expect(wrapper.vm.level).toBe('')
+    expect(messageControl.attributes().message).toBe('message')
+    expect(messageControl.attributes().value).toBe('true')
+    expect(messageControl.attributes().level).toBe('')
 
     eventBus.emit(eventBus.events.error, 'error')
     expect(wrapper.vm.message).toBe('error')
     expect(wrapper.vm.level).toBe('error')
+    expect(wrapper.vm.showMessage).toBe(true)
+    expect(messageControl.attributes().message).toBe('error')
+    expect(messageControl.attributes().value).toBe('true')
+    expect(messageControl.attributes().level).toBe('error')
+  })
+
+  it('busy and idle event hanlers works as expected', () => {
+    const spinnerControl = wrapper.find('appspinner-stub')
 
     eventBus.emit(eventBus.events.busy)
     expect(wrapper.vm.spinner).toBeTruthy()
+    expect(spinnerControl.attributes().active).toBeTruthy()
 
     eventBus.emit(eventBus.events.idle)
     expect(wrapper.vm.spinner).toBeFalsy()
+    expect(spinnerControl.attributes().active).toBeFalsy()
   })
+
 
   it('should listen events', () => {
     const raiseMessage = jest.fn()

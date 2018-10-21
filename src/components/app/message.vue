@@ -5,11 +5,11 @@
     multi-line
     :timeout="timeout"
     :color="color"
-    v-model="gotMessage"
-    @input="closed"
+    :value="value"
+    @input="input"
   >
     <span v-html="message"></span>
-    <v-btn dark icon flat @click.native="closed">
+    <v-btn dark icon flat @click.native="input(false)">
       <v-icon>
         clear
       </v-icon>
@@ -21,11 +21,6 @@
     data () {
       return {
         gotMessage: false
-      }
-    },
-    watch: {
-      message: function (value) {
-        this.gotMessage = Boolean(value)
       }
     },
     computed: {
@@ -40,15 +35,17 @@
       level: {
         default: false
       },
+      value: {
+        required: true
+      },
       timeout: {
         type: Number,
         default: 3000
       }
     },
     methods: {
-      closed () {
-        this.gotMessage = false
-        this.$emit('closed')
+      input (value) {
+        this.$emit('input', value)
       }
 
     }
