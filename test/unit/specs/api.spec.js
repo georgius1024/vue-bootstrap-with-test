@@ -197,7 +197,9 @@ describe('Api client', () => {
     expect(errorCallback).toBeCalledWith(Api.message)
     eventBus.off(eventBus.events.error, errorCallback)
   })
+
   it('Can get access with valid access token', async () => {
+
     Api.setAccessToken(tokens.newAccessToken)
     mockAxios.intercept = securedEndPoint
     await Api.get('about')
@@ -206,6 +208,9 @@ describe('Api client', () => {
   })
 
   it('Can not get access without valid access token', async () => {
+    const logoutCallback = jest.fn()
+    eventBus.on(eventBus.events.logout, logoutCallback)
+
     Api.setAccessToken(tokens.oldAccessToken)
     Api.clearRefreshToken() // Не используктся refreshToken
     mockAxios.intercept = securedEndPoint
@@ -216,6 +221,8 @@ describe('Api client', () => {
     }
     expect(Api.message).toBe('Authentication Error')
     expect(Api.status).toBe(401)
+    expect(logoutCallback).toBeCalled()
+    eventBus.off(eventBus.events.logout, logoutCallback)
   })
 
   it('Can restore access with valid refresh token', async () => {
@@ -276,5 +283,32 @@ describe('Api client', () => {
     expect(Api.message).toBe('Shall not pass!!!')
     expect(Api.status).toBe(401)
   })
+  it('Listen credentials event', async () => {
+    Api.clearAccessToken()
+    Api.clearRefreshToken()
+
+    const user = {
+      fullName: 'Ефремов В.Г.'
+    }
+    const auth = {
+      accessToken: tokens.oldAccessToken,
+      refreshToken: tokens.oldRefreshToken
+    }
+
+    eventBus.emit(eventBus.events.credentials, auth)
+    expect(Api.accessToken).toBe(tokens.oldAccessToken)
+    expect(Api.refreshToken).toBe(tokens.oldRefreshToken)
+  })
+
+  it('Listen logout event', async () => {
+    Api.setAccessToken(tokens.oldAccessToken)
+    Api.setRefreshToken(tokens.oldRefreshToken)
+
+    eventBus.emit(eventBus.events.logout)
+    expect(Api.accessToken).toBe('')
+    expect(Api.refreshToken).toBe('')
+  })
+
+
 
 })
